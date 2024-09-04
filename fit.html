@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire Coaching Sportif</title>
+    <!-- Styles de intl-tel-input -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+    <link rel="stylesheet" href="css/fit.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Inscription Coaching Sportif</h1>
+        <form id="coachingForm" action="">
+            <!-- Étape 1 -->
+            <div class="step active">
+                <label for="nom">Nom complet :</label>
+                <input type="text" id="nom" name="nom" placeholder="Votre nom complet" required
+                    pattern="[a-zA-ZÀ-ÿ\s\-']{2,}" title="Veuillez entrer un nom valide.">
+
+                <label for="email">Adresse e-mail :</label>
+                <input type="email" id="email" name="email" placeholder="Votre adresse e-mail" required
+                    pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" title="Veuillez entrer une adresse e-mail valide.">
+
+                <label for="phone">Numéro de téléphone :</label>
+                <input type="tel" id="phone" name="phone" placeholder="Votre numéro de téléphone" required>
+            </div>
+
+            <!-- Étape 2 -->
+            <div class="step">
+                <label for="age">Âge :</label>
+                <input type="number" id="age" name="age" placeholder="Votre âge" required min="10" max="100">
+
+                <label for="objectif">Quel est votre principal objectif ?</label>
+                <select id="objectif" name="objectif" onchange="toggleOtherObjective()" required>
+                    <option value="">--Sélectionnez un objectif--</option>
+                    <option value="perte-poids">Perte de poids</option>
+                    <option value="gain-muscle">Gain de muscle</option>
+                    <option value="amelioration-forme">Amélioration de la forme physique</option>
+                    <option value="rehabilitation">Réhabilitation après blessure</option>
+                    <option value="autre">Autre</option>
+                </select>
+
+                <input type="text" id="autreObjectif" class="hidden-input" name="autreObjectif"
+                    placeholder="Veuillez préciser votre objectif">
+            </div>
+
+            <!-- Étape 3 -->
+            <div class="step">
+                <label for="jours-dispo">Sous combien de jours êtes-vous disponible chaque semaine ?</label>
+                <div class="countdown-container">
+                    <input type="range" id="joursDispo" name="joursDispo" min="0" max="7" value="0"
+                        oninput="updateCountdown()">
+                    <div class="countdown">0 jours</div>
+                </div>
+
+                <label>Avez-vous des blessures actuelles ?</label>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="blessures" value="oui" required> Oui
+                    </label>
+                    <label>
+                        <input type="radio" name="blessures" value="non" required> Non
+                    </label>
+                </div>
+            </div>
+
+            <!-- Étape 4 -->
+            <div class="step">
+                <label for="commentaires">Commentaires supplémentaires :</label>
+                <textarea id="commentaires" name="commentaires" rows="5" placeholder="Partagez des informations supplémentaires..."
+                    required></textarea>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="buttons">
+                <button type="button" id="prevBtn" onclick="nextPrev(-1)">Précédent</button>
+                <button type="button" id="nextBtn" onclick="nextPrev(1)">Suivant</button>
+            </div>
+
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <span class="step-circle"></span>
+                <span class="step-circle"></span>
+                <span class="step-circle"></span>
+                <span class="step-circle"></span>
+            </div>
+        </form>
+    </div>
+
+    <!-- Scripts de intl-tel-input -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"></script>
+    <script>
+        // Initialisation de intl-tel-input
+        const phoneInputField = document.getElementById("phone");
+        const iti = window.intlTelInput(phoneInputField, {
+            initialCountry: "fr", // Pays initial
+            separateDialCode: true,
+            preferredCountries: ["fr", "be", "ch", "us", "ca"], // Pays préférés
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+        });
+
+        // Validation du numéro de téléphone lors de la soumission du formulaire
+        document.getElementById("coachingForm").addEventListener("submit", function (event) {
+            if (!iti.isValidNumber()) {
+                event.preventDefault();
+                alert("Veuillez entrer un numéro de téléphone valide.");
+            }
+        });
+
+        // Gestion des étapes du formulaire
+        let currentStep = 0;
+        showStep(currentStep);
+
+        function showStep(stepIndex) {
+            const steps = document.querySelectorAll(".step");
+            steps.forEach((step, index) => {
+                step.style.display = index === stepIndex ? "block" : "none";
+            });
+            document.getElementById("prevBtn").style.display = stepIndex === 0 ? "none" : "inline-block";
+            document.getElementById("nextBtn").innerHTML = stepIndex === (steps.length - 1) ? "Soumettre" : "Suivant";
+            updateStepIndicator(stepIndex);
+        }
+
+        function nextPrev(n) {
+            const steps = document.querySelectorAll(".step");
+            if (n === 1 && !validateStep()) return;
+            steps[currentStep].style.display = "none";
+            currentStep += n;
+            if (currentStep >= steps.length) {
+                document.getElementById("coachingForm").submit();
+            } else {
+                showStep(currentStep);
+            }
+        }
+
+        function validateStep() {
+            const step = document.querySelectorAll(".step")[currentStep];
+            const inputs = step.querySelectorAll("input, select, textarea");
+            let valid = true;
+            inputs.forEach(input => {
+                if (!input.checkValidity()) {
+                    input.reportValidity();
+                    valid = false;
+                }
+            });
+            return valid;
+        }
+
+        function updateStepIndicator(stepIndex) {
+            const circles = document.querySelectorAll(".step-indicator span");
+            circles.forEach((circle, index) => {
+                circle.className = index <= stepIndex ? "active" : "";
+            });
+        }
+
+        // Gestion des objectifs spécifiques
+        function toggleOtherObjective() {
+            const objectifSelect = document.getElementById("objectif");
+            const autreObjectifInput = document.getElementById("autreObjectif");
+            autreObjectifInput.style.display = objectifSelect.value === "autre" ? "block" : "none";
+            autreObjectifInput.required = objectifSelect.value === "autre";
+        }
+
+        // Mise à jour de l'affichage du compte à rebours
+        function updateCountdown() {
+            const joursDispo = document.getElementById("joursDispo").value;
+            document.querySelector(".countdown").textContent = `${joursDispo} jours`;
+        }
+    </script>
+    <!-- Inclusion de la bibliothèque smtp pour gérer les envoies et receptions de maisl -->
+    <script src="https://smtpjs.com/v3/smtp.js">
+    </script>
+</body>
+
+</html>
+
